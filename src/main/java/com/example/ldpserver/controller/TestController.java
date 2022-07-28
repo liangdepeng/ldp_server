@@ -1,9 +1,24 @@
 package com.example.ldpserver.controller;
 
+import com.alibaba.fastjson2.JSON;
 import com.example.ldpserver.model.BaseBean;
 import com.example.ldpserver.model.TestUserBean;
+import com.example.ldpserver.model.VideoListBean;
 import com.example.ldpserver.requestutils.ResultUtils;
+import com.google.gson.Gson;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 @RestController
 public class TestController {
@@ -22,7 +37,7 @@ public class TestController {
     @RequestMapping("getTestUserError")
     public BaseBean<TestUserBean> getTestUserError() {
         TestUserBean userBean = new TestUserBean();
-        return ResultUtils.convertErrorResponse(null,"查询失败");
+        return ResultUtils.convertErrorResponse(null, "查询失败");
     }
 
     /**
@@ -30,7 +45,7 @@ public class TestController {
      * <a href="http://host:8080/test/update?age=xx"></a>
      */
     @GetMapping("/test/update")
-    public BaseBean<TestUserBean> updateAge(@RequestParam int age){
+    public BaseBean<TestUserBean> updateAge(@RequestParam int age) {
         TestUserBean userBean = new TestUserBean();
         userBean.setUserAge(age);
         return ResultUtils.convertSuccessResponse(userBean);
@@ -41,10 +56,75 @@ public class TestController {
      * <a href="http://host:8080/test/update/xx"></a>
      */
     @GetMapping("/test/update/{age}")
-    public BaseBean<TestUserBean> updateAge2(@PathVariable("age") int age){
+    public BaseBean<TestUserBean> updateAge2(@PathVariable("age") int age) {
         TestUserBean userBean = new TestUserBean();
         userBean.setUserAge(age);
         return ResultUtils.convertSuccessResponse(userBean);
     }
+
+
+
+    @GetMapping("/test/getMovies")
+    public BaseBean<VideoListBean.DataDTO> getMovies() {
+        HttpURLConnection connection;
+        Gson gson = new Gson();
+        try {
+            URL url = new URL("https://front-gateway.mtime.cn/ticket/schedule/top/movies.api?locationId=290");
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setReadTimeout(8000);
+            connection.setConnectTimeout(8000);
+            //  connection.addRequestProperty("Content-Type","application/json;charset=UTF-8");
+            InputStream inputStream = connection.getInputStream();
+            // 设置 UTF_8 否则中文乱码
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            StringBuilder result = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.append(line);
+            }
+            String value = String.valueOf(result);
+//            String value2 = new String(value.getBytes(StandardCharsets.UTF_8));
+            System.out.println("value");
+            System.out.println("value");
+            System.out.println("value");
+            System.out.println(value);
+            System.out.println("value");
+            System.out.println("value");
+            System.out.println("value");
+            VideoListBean videoListBean = gson.fromJson(value, VideoListBean.class);
+            //  VideoListBean videoListBean = JSON.parseObject(value, VideoListBean.class);
+            if (videoListBean != null && videoListBean.data != null && videoListBean.data.hotPlayMovies != null && videoListBean.data.hotPlayMovies.size() > 0) {
+                return ResultUtils.convertSuccessResponse(videoListBean.data);
+            } else {
+                return ResultUtils.convertErrorResponse(null, "请求异常");
+            }
+            //  return ResultUtils.convertErrorResponse(null,"请求异常");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    //https://www.hangge.com/blog/cache/detail_2516.html
+    // https://www.hangge.com/blog/cache/detail_2513.html
+    // https://www.hangge.com/blog/cache/detail_2513.html
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @GetMapping("/test/movies")
+    public BaseBean<VideoListBean.DataDTO> getMovies2(){
+        String url = "https://front-gateway.mtime.cn/ticket/schedule/top/movies.api?locationId=290";
+        String str = restTemplate.getForObject(url, String.class);
+        System.out.println(str);
+        Gson gson = new Gson();
+        VideoListBean videoListBean = gson.fromJson(str, VideoListBean.class);
+        //  VideoListBean videoListBean = JSON.parseObject(value, VideoListBean.class);
+        if (videoListBean != null && videoListBean.data != null && videoListBean.data.hotPlayMovies != null && videoListBean.data.hotPlayMovies.size() > 0) {
+            return ResultUtils.convertSuccessResponse(videoListBean.data);
+        } else {
+            return ResultUtils.convertErrorResponse(null, "请求异常");
+        }
+    }
+
 
 }

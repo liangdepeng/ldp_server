@@ -10,9 +10,9 @@ public class TestUserBean {
     // test
     public TestUserBean() {
         setUserId("12321");
-        setUserAge(20);
+        setUserAge(26);
         setUserSex("男");
-        setUserName("白雪");
+        setUserName("兴华");
     }
 
     public String getUserId() {

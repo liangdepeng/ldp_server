@@ -8,10 +8,14 @@ public class ResultUtils {
     public final static int SUCCESS = 0;
     public final static int ERROR = -1;
 
+
     public static <T> BaseBean<T> convertSuccessResponse(T data) {
+        return convertSuccessResponse(data,"");
+    }
+    public static <T> BaseBean<T> convertSuccessResponse(T data,String message) {
         BaseBean<T> baseBean = new BaseBean<>();
         baseBean.setCode(SUCCESS);
-        baseBean.setMessage("");
+        baseBean.setMessage(message);
         baseBean.setData(data);
         return baseBean;
     }

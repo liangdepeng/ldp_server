@@ -6,10 +6,20 @@ public class TokenBean {
     private String userName;
     private long refreshTime;
 
+    private String token;
+
     public TokenBean(String userId, String userName, long refreshTime) {
         this.userId = userId;
         this.userName = userName;
         this.refreshTime = refreshTime;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public String getUserId() {

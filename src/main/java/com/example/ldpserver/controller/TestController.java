@@ -1,11 +1,16 @@
 package com.example.ldpserver.controller;
 
 import com.alibaba.fastjson2.JSON;
+import com.example.ldpserver.cache.UserCacheManager;
+import com.example.ldpserver.cache.UserInfo;
 import com.example.ldpserver.model.BaseBean;
 import com.example.ldpserver.model.TestUserBean;
 import com.example.ldpserver.model.VideoListBean;
+import com.example.ldpserver.requestutils.HttpUrl;
+import com.example.ldpserver.requestutils.JsonUtil;
 import com.example.ldpserver.requestutils.ResultUtils;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -19,6 +24,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @RestController
 public class TestController {
@@ -61,7 +67,6 @@ public class TestController {
         userBean.setUserAge(age);
         return ResultUtils.convertSuccessResponse(userBean);
     }
-
 
 
     @GetMapping("/test/getMovies")
@@ -112,12 +117,13 @@ public class TestController {
     private RestTemplate restTemplate;
 
     @GetMapping("/test/movies")
-    public BaseBean<VideoListBean.DataDTO> getMovies2(){
-        String url = "https://front-gateway.mtime.cn/ticket/schedule/top/movies.api?locationId=290";
+    public BaseBean<VideoListBean.DataDTO> getMovies2() {
+        String url = new String(Base64.getUrlDecoder().decode(HttpUrl.MOVIE_LIST_URL));
         String str = restTemplate.getForObject(url, String.class);
         System.out.println(str);
-        Gson gson = new Gson();
-        VideoListBean videoListBean = gson.fromJson(str, VideoListBean.class);
+        // Gson gson = new Gson();
+        // VideoListBean videoListBean = gson.fromJson(str, VideoListBean.class);
+        VideoListBean videoListBean = JsonUtil.toDataBean(str, VideoListBean.class);
         //  VideoListBean videoListBean = JSON.parseObject(value, VideoListBean.class);
         if (videoListBean != null && videoListBean.data != null && videoListBean.data.hotPlayMovies != null && videoListBean.data.hotPlayMovies.size() > 0) {
             return ResultUtils.convertSuccessResponse(videoListBean.data);
@@ -127,4 +133,17 @@ public class TestController {
     }
 
 
+    @PostMapping("/test1/login")
+    public BaseBean<Boolean> loginToServer(@RequestBody UserInfo userInfo) {
+        String userId = userInfo.getUserId();
+        String userPwd = userInfo.getUserPwd();
+        if (!UserCacheManager.getInstance().checkUserExist(userId)) {
+            return ResultUtils.convertSuccessResponse(false, "账号不存在！");
+        }
+        if (UserCacheManager.getInstance().checkUserAndPwd(userId, userPwd)) {
+            return ResultUtils.convertSuccessResponse(true, "登录成功");
+        } else {
+            return ResultUtils.convertSuccessResponse(false, "用户名或密码不正确");
+        }
+    }
 }

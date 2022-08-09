@@ -1,7 +1,10 @@
 package com.example.ldpserver.controller;
 
+import com.example.ldpserver.requestutils.HttpUrl;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.Base64;
 
 @Controller
 public class HelloController {

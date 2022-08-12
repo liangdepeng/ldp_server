@@ -13,10 +13,12 @@ import java.util.ArrayList;
 public class FileUtil {
 
     // ClassPathResource方式
-    public static final ClassPathResource USER_STREAM = new ClassPathResource("login_plugin/userInfo.txt");
+//    public static final ClassPathResource USER_STREAM = new ClassPathResource("login_plugin/userInfo.txt");
     private static final Gson gson = new Gson();
 
-    private static final String path = "C:/Users/Administrator/Desktop/server/userInfo.txt";
+
+    // todo  模拟数据库  暂时存到文件里 后续接入数据库
+     private static final String path = "C:/Users/Administrator/Desktop/server/userInfo.txt";
 
 
     public synchronized static void readUserFile() {

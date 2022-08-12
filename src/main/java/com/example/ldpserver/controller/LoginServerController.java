@@ -9,6 +9,8 @@ import com.example.ldpserver.requestutils.ResultUtils;
 import com.example.ldpserver.token.TokenBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,20 +28,21 @@ public class LoginServerController {
     private RestTemplate restTemplate;
 
     @PostMapping("/login")
-    public BaseBean<Boolean> loginToServer(@RequestBody UserInfo userInfo) {
+    public BaseBean<UserInfo> loginToServer(@RequestBody UserInfo userInfo) {
         String userId = userInfo.getUserId();
         String userPwd = userInfo.getUserPwd();
         if (!UserCacheManager.getInstance().checkUserExist(userId)) {
-            return ResultUtils.convertSuccessResponse(false, "账号不存在！");
+            return ResultUtils.convertSuccessResponse(null, "账号不存在！");
         }
         if (UserCacheManager.getInstance().checkUserAndPwd(userId, userPwd)) {
-            return ResultUtils.convertSuccessResponse(true, "登录成功");
+            UserInfo info = UserCacheManager.getInstance().getUserInfo(userId);
+            return ResultUtils.convertSuccessResponse(info, "登录成功");
         } else {
-            return ResultUtils.convertSuccessResponse(false, "用户名或密码不正确");
+            return ResultUtils.convertSuccessResponse(null, "用户名或密码不正确");
         }
     }
 
-    @PostMapping("/register")
+    @PostMapping(value = "/register" ,consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public BaseBean<Boolean> registerToServer(@RequestBody UserInfo userInfo) {
         String userId = userInfo.getUserId();
         //  String userPwd = userInfo.getUserPwd();
@@ -49,7 +52,7 @@ public class LoginServerController {
 
         long num = (long) (Math.random() * 123456789 + 654321);
         String timestamp = String.valueOf(System.currentTimeMillis());
-        String str = "09r7aUIBBQ$num$timestamp";
+        String str = "09r7aUIBBQ"+num+timestamp;
         String registerTokenUrl = "https://api-cn.ronghub.com/user/getToken.json";
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Content-Type", "application/x-www-form-urlencoded");
@@ -58,8 +61,17 @@ public class LoginServerController {
         httpHeaders.add("Timestamp", timestamp);
         httpHeaders.add("Signature", getStrSha1(str));
 
-        User user = new User(userInfo.getUserId(),userInfo.getUserName(),"_");
-        HttpEntity<User> httpEntity = new HttpEntity<>(user, httpHeaders);
+      //  User user = new User(userInfo.getUserId(),userInfo.getUserName(),"_");
+
+
+        // form 提交表单
+        MultiValueMap<String, String> params= new LinkedMultiValueMap<String, String>();
+        params.add("userId",userInfo.getUserId());
+        params.add("name",userInfo.getUserName());
+        params.add("portraitUri","_");
+
+        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(params, httpHeaders);
+
         ResponseEntity<String> response = restTemplate.postForEntity(registerTokenUrl, httpEntity, String.class);
 
         if (HttpStatus.OK == response.getStatusCode()) {

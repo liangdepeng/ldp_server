@@ -51,6 +51,10 @@ public class UserCacheManager {
         return false;
     }
 
+    public UserInfo getUserInfo(String userId){
+        return userInfoCacheMap.get(userId);
+    }
+
 
     public static boolean equals(CharSequence a, CharSequence b) {
         if (a == b) return true;

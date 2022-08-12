@@ -1,6 +1,7 @@
 package com.example.ldpserver.cache;
 
 
+import org.springframework.web.bind.annotation.RequestBody;
 
 public class UserInfo {
     private String userName;
